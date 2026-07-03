@@ -103,6 +103,11 @@ class Traffics extends _$Traffics with AutoDisposeNotifierMixin {
   }
 
   void addTraffic(Traffic value) {
+    // 新旧流量值相同时跳过写入，降低 Riverpod 通知和 UI 重绘
+    final list = state.list;
+    if (list.isNotEmpty && list.last == value) {
+      return;
+    }
     this.value = state.copyWith()..add(value);
   }
 
@@ -116,6 +121,15 @@ class TotalTraffic extends _$TotalTraffic with AutoDisposeNotifierMixin {
   @override
   Traffic build() {
     return const Traffic();
+  }
+}
+
+/// 运行时窗口可见状态，用于控制流量刷新频率
+@Riverpod(keepAlive: true)
+class WindowVisible extends _$WindowVisible with AutoDisposeNotifierMixin {
+  @override
+  bool build() {
+    return true;
   }
 }
 

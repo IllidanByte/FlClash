@@ -159,6 +159,9 @@ TrayTitleState trayTitleState(Ref ref) {
   final showTrayTitle = ref.watch(
     appSettingProvider.select((state) => state.showTrayTitle),
   );
+  if (!showTrayTitle) {
+    return const TrayTitleState(showTrayTitle: false, traffic: Traffic());
+  }
   final traffic = ref.watch(
     trafficsProvider.select((state) => state.list.safeLast(const Traffic())),
   );

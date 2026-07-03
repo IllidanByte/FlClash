@@ -228,7 +228,7 @@ final class ProxyStateProvider
   }
 }
 
-String _$proxyStateHash() => r'3df11daa70bd06de32da43e9b3e09a74389264b2';
+String _$proxyStateHash() => r'b4a316e7f67927d6903af702d2b4e542c11c11c8';
 
 @ProviderFor(trayState)
 final trayStateProvider = TrayStateProvider._();
@@ -310,7 +310,7 @@ final class TrayTitleStateProvider
   }
 }
 
-String _$trayTitleStateHash() => r'aacf3779c879f7f1144484a80043679020bf8424';
+String _$trayTitleStateHash() => r'aacef4ae3642d8368b252bfb24e3de288849619e';
 
 @ProviderFor(vpnState)
 final vpnStateProvider = VpnStateProvider._();

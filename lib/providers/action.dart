@@ -54,14 +54,32 @@ class CommonAction extends _$CommonAction {
     }
   }
 
+  /// 兼容：同时更新实时速度和累计流量
   Future<void> updateTraffic() async {
+    await updateSpeedTraffic();
+    await updateTotalTraffic();
+  }
+
+  /// 高频刷新：仅更新实时上传/下载速度
+  Future<void> updateSpeedTraffic() async {
     final onlyStatisticsProxy = ref.read(
       appSettingProvider.select((state) => state.onlyStatisticsProxy),
     );
     final traffic = await coreController.getTraffic(onlyStatisticsProxy);
     ref.read(trafficsProvider.notifier).addTraffic(traffic);
-    ref.read(totalTrafficProvider.notifier).value = await coreController
+  }
+
+  /// 低频刷新：仅更新累计上传/下载流量，带去重
+  Future<void> updateTotalTraffic() async {
+    final onlyStatisticsProxy = ref.read(
+      appSettingProvider.select((state) => state.onlyStatisticsProxy),
+    );
+    final totalTraffic = await coreController
         .getTotalTraffic(onlyStatisticsProxy);
+    // 新旧累计流量相同时跳过写入，避免不必要的 UI 重建
+    if (totalTraffic != ref.read(totalTrafficProvider)) {
+      ref.read(totalTrafficProvider.notifier).value = totalTraffic;
+    }
   }
 
   Future<void> autoCheckUpdate() async {
@@ -114,6 +132,7 @@ class CommonAction extends _$CommonAction {
 class SetupAction extends _$SetupAction {
   Timer? _updateTimer;
   DateTime? startTime;
+  int _tick = 0;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -138,6 +157,7 @@ class SetupAction extends _$SetupAction {
 
   Future<void> _handleStart() async {
     startTime ??= DateTime.now();
+    _tick = 0;
     //The local status must be updated when performing the run task
     ref.read(commonActionProvider.notifier).updateRunTime();
     ref.read(commonActionProvider.notifier).updateTraffic();
@@ -145,9 +165,37 @@ class SetupAction extends _$SetupAction {
       await coreController.startListener();
     }
     _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _tick++;
       ref.read(commonActionProvider.notifier).updateRunTime();
-      ref.read(commonActionProvider.notifier).updateTraffic();
+      _refreshTraffic();
     });
+  }
+
+  /// 根据当前页面、窗口可见性和托盘设置动态决定刷新频率
+  void _refreshTraffic() {
+    final isWindowVisible = ref.read(windowVisibleProvider);
+    final isDashboard = ref.read(currentPageLabelProvider) == PageLabel.dashboard;
+    final hasNetworkSpeed = ref
+        .read(dashboardStateProvider)
+        .dashboardWidgets
+        .contains(DashboardWidget.networkSpeed);
+    final showTrayTitle = ref.read(
+      appSettingProvider.select((state) => state.showTrayTitle),
+    );
+
+    // 实时速度：仅仪表盘网速组件可见或托盘网速开启时刷新
+    final needSpeed =
+        (isWindowVisible && isDashboard && hasNetworkSpeed) || showTrayTitle;
+    if (needSpeed) {
+      ref.read(commonActionProvider.notifier).updateSpeedTraffic();
+    }
+
+    // 累计流量：仪表盘可见时 3 秒，非仪表盘 10 秒，窗口隐藏 30 秒
+    final totalInterval =
+        isWindowVisible ? (isDashboard ? 3 : 10) : 30;
+    if (_tick % totalInterval == 0) {
+      ref.read(commonActionProvider.notifier).updateTotalTraffic();
+    }
   }
 
   Future _updateStartTime() async {
@@ -609,8 +657,10 @@ class SystemAction extends _$SystemAction {
     final visible = await window?.isVisible;
     if (visible != null && !visible) {
       window?.show();
+      ref.read(windowVisibleProvider.notifier).value = true;
     } else {
       window?.hide();
+      ref.read(windowVisibleProvider.notifier).value = false;
     }
   }
 

@@ -316,6 +316,8 @@ class GlobalState {
     } else {
       window?.hide();
     }
+    container.read(windowVisibleProvider.notifier).value =
+        !container.read(appSettingProvider).silentLaunch;
     await _handleFailedPreference();
     await _handlerDisclaimer();
     await _showCrashlyticsTip();

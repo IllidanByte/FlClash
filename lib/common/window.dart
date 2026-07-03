@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/config.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +76,7 @@ class Window {
     await windowManager.show();
     await windowManager.focus();
     await windowManager.setSkipTaskbar(false);
+    globalState.container.read(windowVisibleProvider.notifier).value = true;
   }
 
   Future<bool> get isVisible async {
@@ -94,6 +97,7 @@ class Window {
     render?.pause();
     await windowManager.hide();
     await windowManager.setSkipTaskbar(true);
+    globalState.container.read(windowVisibleProvider.notifier).value = false;
   }
 }
 

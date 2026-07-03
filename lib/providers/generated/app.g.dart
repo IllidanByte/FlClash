@@ -354,7 +354,7 @@ final class TrafficsProvider
   }
 }
 
-String _$trafficsHash() => r'00b83d393175b51abcef277417fb3d9b70cc247f';
+String _$trafficsHash() => r'25d1a29d46754768e40302bad49ceff2c3a8cda8';
 
 abstract class _$Traffics extends $Notifier<FixedList<Traffic>> {
   FixedList<Traffic> build();
@@ -419,6 +419,64 @@ abstract class _$TotalTraffic extends $Notifier<Traffic> {
             as $ClassProviderElement<
               AnyNotifier<Traffic, Traffic>,
               Traffic,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// 运行时窗口可见状态，用于控制流量刷新频率
+
+@ProviderFor(WindowVisible)
+final windowVisibleProvider = WindowVisibleProvider._();
+
+/// 运行时窗口可见状态，用于控制流量刷新频率
+final class WindowVisibleProvider
+    extends $NotifierProvider<WindowVisible, bool> {
+  /// 运行时窗口可见状态，用于控制流量刷新频率
+  WindowVisibleProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'windowVisibleProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$windowVisibleHash();
+
+  @$internal
+  @override
+  WindowVisible create() => WindowVisible();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$windowVisibleHash() => r'667c3afb8ed643dccaea103dcf57ed7413bd885a';
+
+/// 运行时窗口可见状态，用于控制流量刷新频率
+
+abstract class _$WindowVisible extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
               Object?,
               Object?
             >;
@@ -1791,7 +1849,7 @@ final class NetworkDetectionProvider
   }
 }
 
-String _$networkDetectionHash() => r'e2892c87c76992bec307699de7d838152aa272d5';
+String _$networkDetectionHash() => r'1cab20d67ec54321b4dbba9d971cd80e98542e23';
 
 abstract class _$NetworkDetection extends $Notifier<NetworkDetectionState> {
   NetworkDetectionState build();
