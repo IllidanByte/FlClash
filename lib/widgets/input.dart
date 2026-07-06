@@ -274,6 +274,9 @@ class _ListInputPageState extends ConsumerState<ListInputPage> {
   Future<void> _handleAddOrEdit([String? item]) async {
     final appLocalizations = context.appLocalizations;
     String? uniqueValidator(String? value) {
+      if (item == null && value?.splitByMultipleSeparators is List<String>) {
+        return null;
+      }
       final index = _items.indexWhere((entry) {
         return entry == value;
       });
@@ -303,7 +306,13 @@ class _ListInputPageState extends ConsumerState<ListInputPage> {
     if (item != null) {
       nextItems[index] = value;
     } else {
-      nextItems.add(value);
+      final splitValue = value.splitByMultipleSeparators;
+      final values = splitValue is List<String> ? splitValue : [value];
+      for (final value in values) {
+        if (!nextItems.contains(value)) {
+          nextItems.add(value);
+        }
+      }
     }
     _items = nextItems;
     setState(() {});

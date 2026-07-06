@@ -44,8 +44,18 @@ void main() {
       expect(result, ['a', 'b', 'c']);
     });
 
+    test('splits on newline', () {
+      final result = 'a\nb\nc'.splitByMultipleSeparators;
+      expect(result, ['a', 'b', 'c']);
+    });
+
     test('splits on mixed separators', () {
-      final result = 'a, b; c'.splitByMultipleSeparators;
+      final result = 'a, b; c\nd'.splitByMultipleSeparators;
+      expect(result, ['a', 'b', 'c', 'd']);
+    });
+
+    test('splits on tabs', () {
+      final result = 'a\tb\tc'.splitByMultipleSeparators;
       expect(result, ['a', 'b', 'c']);
     });
 

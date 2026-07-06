@@ -156,12 +156,13 @@ Future<int> _package(
     return activateResult.exitCode;
   }
 
+  final buildInfo = await _getBuildInfo(rootDir);
   final coreSha256 = platform == 'windows' ? await _buildGoCore(rootDir) : null;
 
   final file = File(p.join(rootDir, 'env.json'));
 
   await file.writeAsString(
-    jsonEncode({'APP_ENV': env, 'CORE_SHA256': ?coreSha256}),
+    jsonEncode({'APP_ENV': env, 'CORE_SHA256': ?coreSha256, ...buildInfo}),
   );
 
   final flutterBuildArgs = createFlutterBuildArgs(
@@ -204,6 +205,35 @@ Future<int> _package(
   });
   final exitCode = await process.exitCode;
   return exitCode;
+}
+
+Future<Map<String, String>> _getBuildInfo(String rootDir) async {
+  final source = p.basename(rootDir);
+  return {
+    'BUILD_SOURCE': source,
+    'BUILD_COMMIT': await _getGitCommit(rootDir),
+    'BUILD_DIRTY': await _getGitDirty(rootDir) ? 'true' : 'false',
+  };
+}
+
+Future<String> _getGitCommit(String rootDir) async {
+  final result = await Process.run('git', [
+    'rev-parse',
+    '--short',
+    'HEAD',
+  ], workingDirectory: rootDir);
+  if (result.exitCode != 0) return '';
+  return (result.stdout as String).trim();
+}
+
+Future<bool> _getGitDirty(String rootDir) async {
+  final result = await Process.run('git', [
+    'status',
+    '--porcelain',
+    '--untracked-files=no',
+  ], workingDirectory: rootDir);
+  if (result.exitCode != 0) return false;
+  return (result.stdout as String).trim().isNotEmpty;
 }
 
 Future<String?> _buildGoCore(String rootDir) async {

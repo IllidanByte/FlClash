@@ -130,18 +130,31 @@ class AboutView extends StatelessWidget {
                           height: 64,
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appName,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          Text(
-                            globalState.packageInfo.version,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                        ],
+                      Builder(
+                        builder: (context) {
+                          final packageInfo = globalState.packageInfo;
+                          final commitLabel = buildCommitLabel();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                buildVersionLabel(packageInfo),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                              if (commitLabel.isNotEmpty)
+                                Text(
+                                  'build: $commitLabel',
+                                  style: Theme.of(context).textTheme.labelLarge,
+                                ),
+                              Text(
+                                'source: $buildSource',
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

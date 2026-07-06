@@ -16,7 +16,7 @@ extension StringExtension on String {
 
   dynamic get splitByMultipleSeparators {
     final parts = split(
-      RegExp(r'[, ;]+'),
+      RegExp(r'[,;\s]+'),
     ).where((part) => part.isNotEmpty).toList();
 
     return parts.length > 1 ? parts : this;
