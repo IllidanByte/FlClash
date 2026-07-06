@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/enum/enum.dart';
@@ -18,6 +19,12 @@ class Tray {
 
   Tray._internal();
 
+  String? _lastIconPath;
+  bool? _lastIconIsTemplate;
+  String? _lastToolTip;
+  String? _lastTitle;
+  String? _lastContextMenuSignature;
+
   factory Tray() {
     _instance ??= Tray._internal();
     return _instance!;
@@ -28,6 +35,11 @@ class Tray {
   }
 
   Future<void> destroy() async {
+    _lastIconPath = null;
+    _lastIconIsTemplate = null;
+    _lastToolTip = null;
+    _lastTitle = null;
+    _lastContextMenuSignature = null;
     await trayManager.destroy();
   }
 
@@ -48,12 +60,18 @@ class Tray {
     if (Platform.isLinux) {
       await trayManager.destroy();
     }
-    await trayManager.setIcon(
-      getTryIcon(isStart: isStart, tunEnable: tunEnable),
-      isTemplate: system.isMacOS,
-    );
+    final iconPath = getTryIcon(isStart: isStart, tunEnable: tunEnable);
+    final isTemplate = system.isMacOS;
+    if (_lastIconPath != iconPath || _lastIconIsTemplate != isTemplate) {
+      await trayManager.setIcon(iconPath, isTemplate: isTemplate);
+      _lastIconPath = iconPath;
+      _lastIconIsTemplate = isTemplate;
+    }
     if (!Platform.isLinux) {
-      await trayManager.setToolTip(appName);
+      if (_lastToolTip != appName) {
+        await trayManager.setToolTip(appName);
+        _lastToolTip = appName;
+      }
     }
   }
 
@@ -190,14 +208,21 @@ class Tray {
     );
     menuItems.add(exitMenuItem);
     final menu = Menu(items: menuItems);
-    await trayManager.setContextMenu(menu);
+    final contextMenuSignature = _getContextMenuSignature(menu);
+    if (_lastContextMenuSignature != contextMenuSignature) {
+      await trayManager.setContextMenu(menu);
+      _lastContextMenuSignature = contextMenuSignature;
+    }
     if (system.isLinux) {
       await _updateSystemTray(
         isStart: trayState.isStart,
         tunEnable: trayState.tunEnable,
       );
     }
-    updateTrayTitle(showTrayTitle: trayState.showTrayTitle, traffic: traffic);
+    await updateTrayTitle(
+      showTrayTitle: trayState.showTrayTitle,
+      traffic: traffic,
+    );
   }
 
   Future<void> updateTrayTitle({
@@ -207,11 +232,30 @@ class Tray {
     if (!system.isMacOS) {
       return;
     }
-    if (!showTrayTitle) {
-      await trayManager.setTitle('');
-    } else {
-      await trayManager.setTitle(traffic.trayTitle);
+    final title = showTrayTitle ? traffic.trayTitle : '';
+    if (_lastTitle != title) {
+      await trayManager.setTitle(title);
+      _lastTitle = title;
     }
+  }
+
+  String _getContextMenuSignature(Menu menu) {
+    return jsonEncode(_removeContextMenuIds(menu.toJson()));
+  }
+
+  Object? _removeContextMenuIds(Object? value) {
+    if (value is List) {
+      return value.map(_removeContextMenuIds).toList();
+    }
+    if (value is Map) {
+      final result = <String, Object?>{};
+      for (final entry in value.entries) {
+        if (entry.key == 'id') continue;
+        result[entry.key.toString()] = _removeContextMenuIds(entry.value);
+      }
+      return result;
+    }
+    return value;
   }
 
   Future<void> _copyEnv(int port) async {
