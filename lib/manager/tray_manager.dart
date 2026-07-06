@@ -18,13 +18,15 @@ class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
   @override
   void initState() {
     super.initState();
-    trayManager.addListener(this);
-    ref.listenManual(trayStateProvider, (prev, next) {
-      if (prev != next) {
-        ref.read(systemActionProvider.notifier).updateTray();
-      }
-    });
-    if (system.isMacOS) {
+    if (tray != null) {
+      trayManager.addListener(this);
+      ref.listenManual(trayStateProvider, (prev, next) {
+        if (prev != next) {
+          ref.read(systemActionProvider.notifier).updateTray();
+        }
+      });
+    }
+    if (system.isMacOS && tray != null) {
       ref.listenManual(trayTitleStateProvider, (prev, next) {
         if (prev != next) {
           tray?.updateTrayTitle(
@@ -60,7 +62,9 @@ class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
 
   @override
   void dispose() {
-    trayManager.removeListener(this);
+    if (tray != null) {
+      trayManager.removeListener(this);
+    }
     super.dispose();
   }
 }

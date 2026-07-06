@@ -269,4 +269,4 @@ class Tray {
   }
 }
 
-final tray = system.isDesktop ? Tray() : null;
+final tray = system.isDesktop && !system.isMacOS ? Tray() : null;
